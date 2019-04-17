@@ -29,15 +29,16 @@ public class DialProgressBar extends View {
     private Path mArcOutlinePath; //轮廓路径
     private float mArcOutlineLineWidth; //轮廓的线宽
     private final PorterDuffXfermode mSrcInferMode;
-
     private Paint mIntervalPaint;
     private SweepGradient mGradient;
+
     private RectF mOutOval;
     private RectF mMiddleOval;
     private RectF mInnerOval;
     private RectF mRoundOval;
-    private float mProgress = 97;
+    private float mProgress = 53;
     private float mOvalRadius;
+    private int mProgressNum = 10;
 
     public DialProgressBar(Context context) {
         this(context, null);
@@ -149,13 +150,11 @@ public class DialProgressBar extends View {
     }
 
     private void drawInterval(Canvas canvas) {
-        canvas.save();
         canvas.rotate(-40, mOutOval.centerX(), mOutOval.centerY());
         float startY = 0;
-        for (int i = 0; i < 9; i++) {
-            canvas.rotate(-10, mOutOval.centerX(), mOutOval.centerY());
+        for (int i = 1; i < mProgressNum; i++) {
+            canvas.rotate(-mProgressNum, mOutOval.centerX(), mOutOval.centerY());
             canvas.drawLine(mOutOval.centerX(), startY, mOutOval.centerX(), startY + mArcWidth, mIntervalPaint);
         }
-        canvas.restore();
     }
 }
