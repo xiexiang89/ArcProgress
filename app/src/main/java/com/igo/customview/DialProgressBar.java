@@ -19,11 +19,12 @@ import android.view.View;
 public class DialProgressBar extends View {
 
     private static final String TAG = "DialProgressBar";
-    private float mStartAngle = 135;
-    private float mSweepAngle = 90;
+    private static final float DEFAULT_DIVIDER_ANGLE = 2.5F;
+
+    private float mStartAngle = 130;
+    private float mSweepAngle = 100;
     private int[] mGradualColors = new int[]{0xFFFF2515, 0xFFFFA62B};
     private int mBgColor = 0xFFD1D1D1;
-    private int mArcWidth;
 
     private Paint mPaint; //进度条画笔
     private Path mArcOutlinePath; //轮廓路径
@@ -36,9 +37,12 @@ public class DialProgressBar extends View {
     private RectF mMiddleOval;
     private RectF mInnerOval;
     private RectF mRoundOval;
+
+    private int mArcWidth;
     private float mProgress = 53;
     private float mOvalRadius;
-    private int mProgressNum = 10;
+    private float mDividerAngle = DEFAULT_DIVIDER_ANGLE;
+    private float mDividerWidth;
 
     public DialProgressBar(Context context) {
         this(context, null);
@@ -51,8 +55,9 @@ public class DialProgressBar extends View {
     public DialProgressBar(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
         final Resources res = getResources();
-        mArcWidth = res.getDimensionPixelOffset(R.dimen.dial_progressbar_stroke_width);
-        mArcOutlineLineWidth = res.getDimension(R.dimen.outline_line_width);
+        mArcWidth = res.getDimensionPixelOffset(R.dimen.dial_progressbar_arc_stroke_width);
+        mArcOutlineLineWidth = res.getDimension(R.dimen.dial_progressbar_outline_line_width);
+        mDividerWidth = res.getDimension(R.dimen.dial_progressbar_divider_width);
         mSrcInferMode = new PorterDuffXfermode(PorterDuff.Mode.SRC_IN);
 
         mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -62,9 +67,9 @@ public class DialProgressBar extends View {
 
         mIntervalPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mIntervalPaint.setColor(Color.WHITE);
-        mIntervalPaint.setStrokeCap(Paint.Cap.SQUARE);
+        mIntervalPaint.setStrokeCap(Paint.Cap.BUTT);
         mIntervalPaint.setStyle(Paint.Style.FILL_AND_STROKE);
-        mIntervalPaint.setStrokeWidth(res.getDimension(R.dimen.dial_interval_width));
+        mIntervalPaint.setStrokeWidth(mDividerWidth);
 
         mOutOval = new RectF();
         mInnerOval = new RectF();
@@ -122,9 +127,9 @@ public class DialProgressBar extends View {
         float value = (mRoundOval.width()/2f)/(mMiddleOval.width()/2f);
         float angle = (float) (value*180/Math.PI);
         final float startFinalAngle = mStartAngle - angle;
-        final float endFinalAngle = mSweepAngle + angle * 2f;
-        drawProgress(canvas,startFinalAngle,mProgress/100f*endFinalAngle);
-        drawInterval(canvas);
+        final float finalSweepAngle = mSweepAngle + angle * 2f;
+        drawProgress(canvas,startFinalAngle,mProgress/100f*finalSweepAngle);
+        drawInterval(canvas,startFinalAngle,finalSweepAngle);
         canvas.restoreToCount(saveCount);
     }
 
@@ -149,12 +154,15 @@ public class DialProgressBar extends View {
         canvas.drawArc(mMiddleOval,startAngle,endAngle,false,mPaint);
     }
 
-    private void drawInterval(Canvas canvas) {
-        canvas.rotate(-40, mOutOval.centerX(), mOutOval.centerY());
-        float startY = 0;
-        for (int i = 1; i < mProgressNum; i++) {
-            canvas.rotate(-mProgressNum, mOutOval.centerX(), mOutOval.centerY());
-            canvas.drawLine(mOutOval.centerX(), startY, mOutOval.centerX(), startY + mArcWidth, mIntervalPaint);
+    private void drawInterval(Canvas canvas, float startAngle, float sweepAngle) {
+        final int arcNum = (int) (sweepAngle / 10);
+        final float totalAngle = sweepAngle - ((arcNum-1) * mDividerAngle);
+        final float angle = totalAngle / arcNum;
+        float start = startAngle + angle;
+        canvas.drawArc(mMiddleOval,start, mDividerAngle,false,mIntervalPaint);
+        for (int i=0; i < arcNum; i++) {
+            canvas.drawArc(mMiddleOval,start, mDividerAngle,false,mIntervalPaint);
+            start = start + mDividerAngle + angle;
         }
     }
 }
