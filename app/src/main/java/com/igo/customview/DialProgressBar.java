@@ -12,8 +12,6 @@ import android.graphics.PorterDuffXfermode;
 import android.graphics.RectF;
 import android.graphics.SweepGradient;
 import android.util.AttributeSet;
-import android.util.FloatProperty;
-import android.util.Log;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
 
