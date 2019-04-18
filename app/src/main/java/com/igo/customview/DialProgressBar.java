@@ -15,7 +15,7 @@ import android.util.AttributeSet;
 import android.util.FloatProperty;
 import android.util.Log;
 import android.view.View;
-import android.view.animation.LinearInterpolator;
+import android.view.animation.DecelerateInterpolator;
 
 /**
  * Created by Edgar on 2019/4/12.
@@ -27,8 +27,8 @@ public class DialProgressBar extends View {
     private static final int BASE_LEVEL = 10;
     private static final float DEFAULT_START_ANGLE = 130;
     private static final float DEFAULT_SWEEP_ANGLE = 100;
-    private static final LinearInterpolator PROGRESS_ANIM_INTERPOLATOR =
-            new LinearInterpolator();
+    private static final DecelerateInterpolator PROGRESS_ANIM_INTERPOLATOR =
+            new DecelerateInterpolator();
     private static final int PROGRESS_ANIM_DURATION = 300;
 
     private float mStartAngle;

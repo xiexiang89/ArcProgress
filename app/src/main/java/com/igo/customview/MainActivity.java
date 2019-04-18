@@ -18,6 +18,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onClick(View view) {
-        dialProgressBar.setLevel(6,false);
+        dialProgressBar.setLevel(6,true);
     }
 }
