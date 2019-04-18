@@ -89,7 +89,7 @@ public class DialProgressBar extends View {
         mRoundOval = new RectF();
         setLayerType(View.LAYER_TYPE_SOFTWARE,null);
         setAngle(DEFAULT_START_ANGLE,DEFAULT_SWEEP_ANGLE);
-//        setLevel(1);
+        setLevel(1,false);
     }
 
     public void setAngle(float startAngle, float sweepAngle) {
