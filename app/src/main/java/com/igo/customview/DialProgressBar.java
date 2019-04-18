@@ -1,5 +1,6 @@
 package com.igo.customview;
 
+import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Canvas;
@@ -11,7 +12,10 @@ import android.graphics.PorterDuffXfermode;
 import android.graphics.RectF;
 import android.graphics.SweepGradient;
 import android.util.AttributeSet;
+import android.util.FloatProperty;
+import android.util.Log;
 import android.view.View;
+import android.view.animation.LinearInterpolator;
 
 /**
  * Created by Edgar on 2019/4/12.
@@ -20,9 +24,15 @@ public class DialProgressBar extends View {
 
     private static final String TAG = "DialProgressBar";
     private static final float DEFAULT_DIVIDER_ANGLE = 2.5F;
+    private static final int BASE_LEVEL = 10;
+    private static final float DEFAULT_START_ANGLE = 130;
+    private static final float DEFAULT_SWEEP_ANGLE = 100;
+    private static final LinearInterpolator PROGRESS_ANIM_INTERPOLATOR =
+            new LinearInterpolator();
+    private static final int PROGRESS_ANIM_DURATION = 300;
 
-    private float mStartAngle = 130;
-    private float mSweepAngle = 100;
+    private float mStartAngle;
+    private float mSweepAngle;
     private int[] mGradualColors = new int[]{0xFFFF2515, 0xFFFFA62B};
     private int mBgColor = 0xFFD1D1D1;
 
@@ -30,7 +40,7 @@ public class DialProgressBar extends View {
     private Path mArcOutlinePath; //轮廓路径
     private float mArcOutlineLineWidth; //轮廓的线宽
     private final PorterDuffXfermode mSrcInferMode;
-    private Paint mIntervalPaint;
+    private Paint mDividerPaint;
     private SweepGradient mGradient;
 
     private RectF mOutOval;
@@ -39,10 +49,12 @@ public class DialProgressBar extends View {
     private RectF mRoundOval;
 
     private int mArcWidth;
-    private float mProgress = 53;
+    private float mProgress;
     private float mOvalRadius;
     private float mDividerAngle = DEFAULT_DIVIDER_ANGLE;
     private float mDividerWidth;
+    private int mMaxArcNum;
+    private int mLevel;
 
     public DialProgressBar(Context context) {
         this(context, null);
@@ -65,17 +77,56 @@ public class DialProgressBar extends View {
         mPaint.setStyle(Paint.Style.FILL_AND_STROKE);
         mArcOutlinePath = new Path();
 
-        mIntervalPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        mIntervalPaint.setColor(Color.WHITE);
-        mIntervalPaint.setStrokeCap(Paint.Cap.BUTT);
-        mIntervalPaint.setStyle(Paint.Style.FILL_AND_STROKE);
-        mIntervalPaint.setStrokeWidth(mDividerWidth);
+        mDividerPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mDividerPaint.setColor(Color.WHITE);
+        mDividerPaint.setStrokeCap(Paint.Cap.BUTT);
+        mDividerPaint.setStyle(Paint.Style.FILL_AND_STROKE);
+        mDividerPaint.setStrokeWidth(mDividerWidth);
 
         mOutOval = new RectF();
         mInnerOval = new RectF();
         mMiddleOval = new RectF();
         mRoundOval = new RectF();
         setLayerType(View.LAYER_TYPE_SOFTWARE,null);
+        setAngle(DEFAULT_START_ANGLE,DEFAULT_SWEEP_ANGLE);
+//        setLevel(1);
+    }
+
+    public void setAngle(float startAngle, float sweepAngle) {
+        mStartAngle = startAngle;
+        mSweepAngle = sweepAngle;
+        mMaxArcNum = (int) (sweepAngle / BASE_LEVEL);
+    }
+
+    public void setLevel(int level, boolean animation) {
+        if (level > mMaxArcNum) {
+            level = mMaxArcNum;
+        }
+        if (level < 0) {
+            level = 0;
+        }
+        if (mLevel != level) {
+            mLevel = level;
+            float progress = mLevel * BASE_LEVEL;
+            if (animation) {
+                refreshProgress(progress);
+            } else {
+                setProgressInternal(progress);
+            }
+        }
+    }
+
+    private void setProgressInternal(float progress) {
+        mProgress = progress;
+        postInvalidate();
+    }
+
+    private void refreshProgress(float progress) {
+        ObjectAnimator animator = ObjectAnimator.ofFloat(this, VISUAL_PROGRESS, progress);
+        animator.setAutoCancel(true);
+        animator.setDuration(PROGRESS_ANIM_DURATION);
+        animator.setInterpolator(PROGRESS_ANIM_INTERPOLATOR);
+        animator.start();
     }
 
     @Override
@@ -129,8 +180,8 @@ public class DialProgressBar extends View {
         final float startFinalAngle = mStartAngle - angle;
         final float finalSweepAngle = mSweepAngle + angle * 2f;
         drawProgress(canvas,startFinalAngle,mProgress/100f*finalSweepAngle);
-        drawInterval(canvas,startFinalAngle,finalSweepAngle);
         canvas.restoreToCount(saveCount);
+        drawDivider(canvas,startFinalAngle,finalSweepAngle);
     }
 
     private void roundArcTo(float radius, final float angle, float startAngle) {
@@ -154,15 +205,26 @@ public class DialProgressBar extends View {
         canvas.drawArc(mMiddleOval,startAngle,endAngle,false,mPaint);
     }
 
-    private void drawInterval(Canvas canvas, float startAngle, float sweepAngle) {
-        final int arcNum = (int) (sweepAngle / 10);
-        final float totalAngle = sweepAngle - ((arcNum-1) * mDividerAngle);
-        final float angle = totalAngle / arcNum;
+    private void drawDivider(Canvas canvas, float startAngle, float sweepAngle) {
+        final float totalAngle = sweepAngle - ((mMaxArcNum-1) * mDividerAngle);
+        final float angle = totalAngle / mMaxArcNum;
         float start = startAngle + angle;
-        canvas.drawArc(mMiddleOval,start, mDividerAngle,false,mIntervalPaint);
-        for (int i=0; i < arcNum; i++) {
-            canvas.drawArc(mMiddleOval,start, mDividerAngle,false,mIntervalPaint);
+        for (int i=1; i < mMaxArcNum; i++) {
+            canvas.drawArc(mMiddleOval,start, mDividerAngle,false, mDividerPaint);
             start = start + mDividerAngle + angle;
         }
     }
+
+    private final FloatProperty<DialProgressBar> VISUAL_PROGRESS = new FloatProperty<DialProgressBar>("visual_progress") {
+        @Override
+        public Float get(DialProgressBar object) {
+            return object.mProgress;
+        }
+
+        @Override
+        public void setValue(DialProgressBar object, float value) {
+            object.mProgress = value;
+            postInvalidate();
+        }
+    };
 }
