@@ -22,9 +22,9 @@ public class DialProgressBar extends View {
 
     private static final String TAG = "DialProgressBar";
     private static final float DEFAULT_DIVIDER_ANGLE = 2.5F;
-    private static final int BASE_LEVEL = 10;
     private static final float DEFAULT_START_ANGLE = 130;
-    private static final float DEFAULT_SWEEP_ANGLE = 100;
+    private static final float DEFAULT_SWEEP_ANGLE = 95;
+    private static final int DEFAULT_MAX_ARC_NUM = 10;
     private static final DecelerateInterpolator PROGRESS_ANIM_INTERPOLATOR =
             new DecelerateInterpolator();
     private static final int PROGRESS_ANIM_DURATION = 300;
@@ -51,7 +51,7 @@ public class DialProgressBar extends View {
     private float mOvalRadius;
     private float mDividerAngle = DEFAULT_DIVIDER_ANGLE;
     private float mDividerWidth;
-    private int mMaxArcNum;
+    private int mMaxArcNum = DEFAULT_MAX_ARC_NUM;
     private int mLevel;
 
     public DialProgressBar(Context context) {
@@ -93,7 +93,10 @@ public class DialProgressBar extends View {
     public void setAngle(float startAngle, float sweepAngle) {
         mStartAngle = startAngle;
         mSweepAngle = sweepAngle;
-        mMaxArcNum = (int) (sweepAngle / BASE_LEVEL);
+    }
+
+    public void setMaxArcNum(int maxArcNum) {
+        mMaxArcNum = maxArcNum;
     }
 
     public void setLevel(int level, boolean animation) {
@@ -105,7 +108,7 @@ public class DialProgressBar extends View {
         }
         if (mLevel != level) {
             mLevel = level;
-            float progress = mLevel * BASE_LEVEL;
+            float progress = mLevel * mMaxArcNum;
             if (animation) {
                 refreshProgress(progress);
             } else {
