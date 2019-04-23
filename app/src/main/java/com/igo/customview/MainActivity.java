@@ -6,18 +6,17 @@ import android.view.View;
 
 public class MainActivity extends AppCompatActivity {
 
-    DialProgressBar dialProgressBar;
+    ArcProgressBar arcProgressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        dialProgressBar = findViewById(R.id.dial_progressbar);
-        dialProgressBar.setMaxArcNum(30);
-//        dialProgressBar.setLevel(2);
+        arcProgressBar = findViewById(R.id.dial_progressbar);
+//        arcProgressBar.setMaxArcNum(30);
     }
 
     public void onClick(View view) {
-        dialProgressBar.setLevel(7,true);
+        arcProgressBar.setProgress(70,true);
     }
 }

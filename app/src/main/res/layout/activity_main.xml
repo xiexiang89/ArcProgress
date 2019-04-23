@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity"
     android:background="@android:color/white">
-    <com.igo.customview.DialProgressBar
+    <com.igo.customview.ArcProgressBar
         android:id="@+id/dial_progressbar"
         android:layout_width="220dp"
         android:layout_height="220dp"

@@ -18,17 +18,17 @@ import android.view.animation.DecelerateInterpolator;
 /**
  * Created by Edgar on 2019/4/12.
  */
-public class DialProgressBar extends View {
+public class ArcProgressBar extends View {
 
     private static final String TAG = "DialProgressBar";
     private static final float DEFAULT_DIVIDER_ANGLE = 2.5F;
     private static final float DEFAULT_START_ANGLE = 130;
     private static final float DEFAULT_SWEEP_ANGLE = 280;
-    private static final int DEFAULT_MAX_ARC_NUM = 10;
     private static final DecelerateInterpolator PROGRESS_ANIM_INTERPOLATOR =
             new DecelerateInterpolator();
     private static final PorterDuffXfermode SRC_IN_MODE = new PorterDuffXfermode(PorterDuff.Mode.SRC_IN);
     private static final PorterDuffXfermode CLEAR_MODE = new PorterDuffXfermode(PorterDuff.Mode.CLEAR);
+    private static final Matrix sMatrix = new Matrix();
     private static final int PROGRESS_ANIM_DURATION = 300;
 
     private float mStartAngle;
@@ -52,18 +52,18 @@ public class DialProgressBar extends View {
     private float mOvalRadius;
     private float mDividerAngle = DEFAULT_DIVIDER_ANGLE;
     private float mDividerWidth;
-    private int mMaxArcNum = DEFAULT_MAX_ARC_NUM;
+    private int mMaxArcNum = 0;
     private int mLevel;
 
-    public DialProgressBar(Context context) {
+    public ArcProgressBar(Context context) {
         this(context, null);
     }
 
-    public DialProgressBar(Context context, AttributeSet attrs) {
+    public ArcProgressBar(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
     }
 
-    public DialProgressBar(Context context, AttributeSet attrs, int defStyle) {
+    public ArcProgressBar(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
         final Resources res = getResources();
         mArcWidth = res.getDimensionPixelOffset(R.dimen.dial_progressbar_arc_stroke_width);
@@ -100,6 +100,7 @@ public class DialProgressBar extends View {
     }
 
     public void setLevel(int level, boolean animation) {
+        if (mMaxArcNum <= 0) return;
         if (level > mMaxArcNum) {
             level = mMaxArcNum;
         }
@@ -109,11 +110,15 @@ public class DialProgressBar extends View {
         if (mLevel != level) {
             mLevel = level;
             float progress = mLevel * mMaxArcNum;
-            if (animation) {
-                refreshProgress(progress);
-            } else {
-                setProgressInternal(progress);
-            }
+            setProgress(progress,animation);
+        }
+    }
+
+    public void setProgress(float progress, boolean animation) {
+        if (animation) {
+            refreshProgress(progress);
+        } else {
+            setProgressInternal(progress);
         }
     }
 
@@ -147,9 +152,8 @@ public class DialProgressBar extends View {
         mInnerOval.set(left + mArcWidth, top + mArcWidth, mOutOval.right - mArcWidth, mOutOval.bottom - mArcWidth);
 
         mGradient = new SweepGradient(mMiddleOval.centerX(), mMiddleOval.centerY(), mGradualColors, null);
-        Matrix matrix = new Matrix();
-        matrix.setRotate(90,mMiddleOval.centerX(),mMiddleOval.centerY());
-        mGradient.setLocalMatrix(matrix);
+        sMatrix.setRotate(90,mMiddleOval.centerX(),mMiddleOval.centerY());
+        mGradient.setLocalMatrix(sMatrix);
         mOvalRadius = mMiddleOval.width()/2f;
     }
 
@@ -164,6 +168,7 @@ public class DialProgressBar extends View {
         super.onDraw(canvas);
         resetPaint();
         int saveCount = canvas.saveLayer(mOutOval, mPaint,Canvas.ALL_SAVE_FLAG);
+        //1. 描出圆弧轮廓
         //绘制灰色背景圆弧
         final float endAngle = mStartAngle + mSweepAngle;
         mArcOutlinePath.reset();
@@ -178,13 +183,17 @@ public class DialProgressBar extends View {
         mArcOutlinePath.close();
         canvas.drawPath(mArcOutlinePath,mPaint);
 
+        //2. 绘制圆弧进度条
         //计算额外的角度,需要追加起始角度,才能看起来两边有圆角
         float value = (mRoundOval.width()/2f)/(mMiddleOval.width()/2f);
         float angle = (float) (value*180/Math.PI);
         final float startFinalAngle = mStartAngle - angle;
         final float finalSweepAngle = mSweepAngle + angle * 2f;
         drawProgress(canvas,startFinalAngle,mProgress/100f*finalSweepAngle);
-        drawDivider(canvas,startFinalAngle,finalSweepAngle);
+        //3. 绘制分割线
+        if (mMaxArcNum > 0) {
+            drawDivider(canvas,startFinalAngle,finalSweepAngle);
+        }
         canvas.restoreToCount(saveCount);
     }
 
@@ -219,14 +228,14 @@ public class DialProgressBar extends View {
         }
     }
 
-    private final FloatProperty<DialProgressBar> VISUAL_PROGRESS = new FloatProperty<DialProgressBar>("visual_progress") {
+    private final FloatProperty<ArcProgressBar> VISUAL_PROGRESS = new FloatProperty<ArcProgressBar>("visual_progress") {
         @Override
-        public Float get(DialProgressBar object) {
+        public Float get(ArcProgressBar object) {
             return object.mProgress;
         }
 
         @Override
-        public void setValue(DialProgressBar object, float value) {
+        public void setValue(ArcProgressBar object, float value) {
             object.mProgress = value;
             postInvalidate();
         }
