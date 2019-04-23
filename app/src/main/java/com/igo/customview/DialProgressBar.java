@@ -4,7 +4,6 @@ import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PorterDuff;
@@ -27,6 +26,8 @@ public class DialProgressBar extends View {
     private static final int DEFAULT_MAX_ARC_NUM = 10;
     private static final DecelerateInterpolator PROGRESS_ANIM_INTERPOLATOR =
             new DecelerateInterpolator();
+    private static final PorterDuffXfermode SRC_IN_MODE = new PorterDuffXfermode(PorterDuff.Mode.SRC_IN);
+    private static final PorterDuffXfermode CLEAR_MODE = new PorterDuffXfermode(PorterDuff.Mode.CLEAR);
     private static final int PROGRESS_ANIM_DURATION = 300;
 
     private float mStartAngle;
@@ -37,7 +38,6 @@ public class DialProgressBar extends View {
     private Paint mPaint; //进度条画笔
     private Path mArcOutlinePath; //轮廓路径
     private float mArcOutlineLineWidth; //轮廓的线宽
-    private final PorterDuffXfermode mSrcInferMode;
     private Paint mDividerPaint;
     private SweepGradient mGradient;
 
@@ -68,7 +68,6 @@ public class DialProgressBar extends View {
         mArcWidth = res.getDimensionPixelOffset(R.dimen.dial_progressbar_arc_stroke_width);
         mArcOutlineLineWidth = res.getDimension(R.dimen.dial_progressbar_outline_line_width);
         mDividerWidth = res.getDimension(R.dimen.dial_progressbar_divider_width);
-        mSrcInferMode = new PorterDuffXfermode(PorterDuff.Mode.SRC_IN);
 
         mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mPaint.setColor(mBgColor);
@@ -76,7 +75,7 @@ public class DialProgressBar extends View {
         mArcOutlinePath = new Path();
 
         mDividerPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        mDividerPaint.setColor(Color.WHITE);
+        mDividerPaint.setXfermode(CLEAR_MODE);
         mDividerPaint.setStrokeCap(Paint.Cap.BUTT);
         mDividerPaint.setStyle(Paint.Style.FILL_AND_STROKE);
         mDividerPaint.setStrokeWidth(mDividerWidth);
@@ -181,8 +180,8 @@ public class DialProgressBar extends View {
         final float startFinalAngle = mStartAngle - angle;
         final float finalSweepAngle = mSweepAngle + angle * 2f;
         drawProgress(canvas,startFinalAngle,mProgress/100f*finalSweepAngle);
-        canvas.restoreToCount(saveCount);
         drawDivider(canvas,startFinalAngle,finalSweepAngle);
+        canvas.restoreToCount(saveCount);
     }
 
     private void roundArcTo(float radius, final float angle, float startAngle) {
@@ -201,7 +200,7 @@ public class DialProgressBar extends View {
      */
     private void drawProgress(Canvas canvas,float startAngle, float endAngle) {
         mPaint.setShader(mGradient);
-        mPaint.setXfermode(mSrcInferMode);
+        mPaint.setXfermode(SRC_IN_MODE);
         mPaint.setStrokeWidth(mArcWidth);
         canvas.drawArc(mMiddleOval,startAngle,endAngle,false,mPaint);
     }
