@@ -13,7 +13,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         dialProgressBar = findViewById(R.id.dial_progressbar);
-        dialProgressBar.setMaxArcNum(10);
+        dialProgressBar.setMaxArcNum(30);
 //        dialProgressBar.setLevel(2);
     }
 

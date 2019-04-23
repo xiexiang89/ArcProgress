@@ -4,6 +4,7 @@ import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Canvas;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PorterDuff;
@@ -22,7 +23,7 @@ public class DialProgressBar extends View {
     private static final String TAG = "DialProgressBar";
     private static final float DEFAULT_DIVIDER_ANGLE = 2.5F;
     private static final float DEFAULT_START_ANGLE = 130;
-    private static final float DEFAULT_SWEEP_ANGLE = 95;
+    private static final float DEFAULT_SWEEP_ANGLE = 280;
     private static final int DEFAULT_MAX_ARC_NUM = 10;
     private static final DecelerateInterpolator PROGRESS_ANIM_INTERPOLATOR =
             new DecelerateInterpolator();
@@ -146,6 +147,9 @@ public class DialProgressBar extends View {
         mInnerOval.set(left + mArcWidth, top + mArcWidth, mOutOval.right - mArcWidth, mOutOval.bottom - mArcWidth);
 
         mGradient = new SweepGradient(mMiddleOval.centerX(), mMiddleOval.centerY(), mGradualColors, null);
+        Matrix matrix = new Matrix();
+        matrix.setRotate(90,mMiddleOval.centerX(),mMiddleOval.centerY());
+        mGradient.setLocalMatrix(matrix);
         mOvalRadius = mMiddleOval.width()/2f;
     }
 
